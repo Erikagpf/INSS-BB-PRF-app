@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aprova — INSS · Banco do Brasil · PRF</title>
+<meta name="description" content="App de estudos e simulados para os concursos do INSS, Banco do Brasil e Polícia Rodoviária Federal. Conteúdo por edital, vídeos do YouTube, treino rápido e provas completas.">
+<meta name="theme-color" content="#0f5132">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">A</span>
+    <div>
+      <div class="brand-title">Aprova</div>
+      <div class="brand-sub">INSS · Banco do Brasil · PRF</div>
+    </div>
+  </div>
+  <button class="icon-btn" id="btnTema" aria-label="Alternar tema claro/escuro" title="Tema">🌓</button>
+</header>
+
+<nav class="tabs" aria-label="Seções do app">
+  <a href="#/estudar" data-tab="estudar"><span class="ti" aria-hidden="true">📚</span><span>Conteúdo</span></a>
+  <a href="#/treino" data-tab="treino"><span class="ti" aria-hidden="true">🎯</span><span>Treino</span></a>
+  <a href="#/simulados" data-tab="simulados"><span class="ti" aria-hidden="true">⏱️</span><span>Simulados</span></a>
+</nav>
+
+<main id="view" tabindex="-1"></main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  window.CONC = {
+    trilhas: [],
+    banco: [],
+    simulados: [],
+    addTrilha: function (t) { this.trilhas.push(t); },
+    addQuestoes: function (arr) { this.banco.push.apply(this.banco, arr); },
+    addSimulados: function (arr) { this.simulados.push.apply(this.simulados, arr); }
+  };
+</script>
+<script src="dados/conteudo-comum.js"></script>
+<script src="dados/conteudo-inss.js"></script>
+<script src="dados/conteudo-bb.js"></script>
+<script src="dados/conteudo-prf.js"></script>
+<script src="dados/banco-comum.js"></script>
+<script src="dados/banco-inss.js"></script>
+<script src="dados/banco-bb.js"></script>
+<script src="dados/banco-prf.js"></script>
+<script src="dados/simulados.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

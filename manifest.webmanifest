@@ -1,0 +1,15 @@
+{
+  "name": "Aprova — INSS, Banco do Brasil e PRF",
+  "short_name": "Aprova",
+  "description": "Conteúdo por edital, treino de questões e simulados completos para os concursos do INSS, do Banco do Brasil e da PRF.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f5",
+  "theme_color": "#0f5132",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
