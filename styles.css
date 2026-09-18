@@ -82,7 +82,7 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
 /* ---------- tabs ---------- */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid;
-  grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px 8px;
+  grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px 8px;
   padding-bottom: calc(6px + env(safe-area-inset-bottom));
   background: var(--surface); border-top: 1px solid var(--line);
 }
@@ -91,12 +91,13 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
   border-radius: 12px; text-decoration: none; color: var(--muted); font-size: .76rem; font-weight: 600;
 }
 .tabs a .ti { font-size: 1.22rem; line-height: 1; }
+.tabs a span:last-child { white-space: nowrap; }
 .tabs a.active { background: var(--primary-soft); color: var(--primary); }
 @media (min-width: 900px) {
   body { padding-bottom: 40px; }
   .tabs {
     position: sticky; top: 59px; bottom: auto; border-top: 0; border-bottom: 1px solid var(--line);
-    grid-template-columns: repeat(3, max-content); gap: 8px; padding: 8px max(16px, calc(50vw - 470px));
+    grid-template-columns: repeat(4, max-content); gap: 8px; padding: 8px max(16px, calc(50vw - 470px));
   }
   .tabs a { flex-direction: row; gap: 8px; padding: 8px 16px; font-size: .92rem; }
 }
@@ -289,3 +290,22 @@ details.faq summary { cursor: pointer; font-weight: 640; }
 }
 @media (min-width: 900px) { .sticky-actions { bottom: 8px; } }
 @media print { .tabs, .topbar, .sticky-actions { display: none !important; } }
+
+/* ---------- redação ---------- */
+textarea.redacao {
+  width: 100%; min-height: 320px; resize: vertical; line-height: 1.7;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  font-family: var(--font); font-size: .96rem;
+}
+.contador { font-variant-numeric: tabular-nums; }
+.contador.estourou { color: var(--bad); font-weight: 700; }
+pre.prompt {
+  white-space: pre-wrap; word-break: break-word; background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px; font-size: .82rem; max-height: 260px; overflow: auto; margin: 0;
+}
+.ia-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.ia-links a {
+  display: block; text-align: center; text-decoration: none; font-weight: 640; font-size: .9rem;
+  border: 1px solid var(--line); border-radius: 11px; padding: 11px 8px; color: var(--text); background: var(--surface);
+}
+.ia-links a:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }

@@ -13,6 +13,7 @@ Funciona no computador e no celular, e pode ser adicionado à tela de início do
 | **Conteúdo** | O edital dividido em módulos. Quatro botões: **Matérias em comum** (cai nas três provas), **Específico INSS**, **Específico BB** e **Específico PRF**. Cada módulo traz o resumo explicado, os pontos-chave para decorar, as pegadinhas da banca, **5 vídeos recomendados do YouTube** (3 aulas específicas + 2 buscas prontas) e um teste com correção e explicação no final. |
 | **Treino** | Questões por concurso e por matéria, uma de cada vez, com correção imediata e explicação do erro. Filtros: "só as que eu errei" e "só matérias específicas". No fim, mostra o aproveitamento por matéria e **em que focar**. |
 | **Simulados** | Prova completa de cada concurso, com tempo cronometrado, navegação entre questões, marcação para revisar e relatório final: nota, percentual, desempenho por matéria, pontuação líquida no padrão CEBRASPE e gabarito comentado questão por questão. |
+| **Redação** | Temas de prova discursiva no formato da banca (texto motivador, comando e aspectos obrigatórios). A pessoa escreve dentro do app e clica em **Copiar prompt + minha redação**: o app monta um prompt de correção pronto para colar em um chat de IA (ChatGPT, Claude ou Gemini), que devolve nota por critério, erros de português trecho a trecho e o que treinar. O rascunho fica salvo. |
 
 O progresso (módulos estudados, acertos, histórico de simulados) fica salvo no próprio navegador,
 no aparelho de quem está estudando.
@@ -23,6 +24,7 @@ no aparelho de quem está estudando.
 - 191 questões com explicação, no estilo das bancas CEBRASPE (INSS e PRF) e CESGRANRIO (BB)
 - 3 simulados completos: INSS (64 questões / 150 min), BB (52 / 150 min) e PRF (70 / 180 min),
   com opção de versão reduzida pela metade
+- 15 temas de redação (5 por concurso), com o que a banca espera em cada um
 
 ## Como abrir no computador (Windows)
 
@@ -72,6 +74,7 @@ Tudo fica em arquivos JavaScript simples dentro da pasta `dados/`, sem etapa de 
 - `conteudo-comum.js`, `conteudo-inss.js`, `conteudo-bb.js`, `conteudo-prf.js` — os módulos de estudo.
 - `banco-comum.js`, `banco-inss.js`, `banco-bb.js`, `banco-prf.js` — as questões.
 - `simulados.js` — quantas questões de cada matéria entram em cada simulado.
+- `redacoes.js` — os temas de redação (texto motivador, comando, aspectos e o que a banca espera).
 
 Uma questão tem este formato:
 
@@ -94,6 +97,13 @@ Uma questão tem este formato:
 Para ligar uma questão a um módulo, use o mesmo valor de `topico` que está na lista `topicos`
 do módulo correspondente.
 
+### Redação
+
+Para criar um tema novo, copie um bloco de `redacoes.js` e troque `titulo`, `motivador`, `comando`,
+`aspectos` (os pontos de abordagem obrigatória) e `espera` (o que a banca quer ver, exibido só depois
+que a pessoa escreve). O prompt de correção é montado pelo app a partir desses campos — não precisa
+escrever prompt nenhum à mão.
+
 ## Estrutura dos arquivos
 
 ```
@@ -103,6 +113,6 @@ app.js                  navegação, motor de questões, simulados e progresso
 manifest.webmanifest    permite instalar como app no celular
 sw.js                   cache para funcionar offline
 icons/icon.svg          ícone
-dados/                  conteúdo, questões e simulados
+dados/                  conteúdo, questões, simulados e temas de redação
 Abrir Aprova.bat        atalho para abrir no Windows
 ```

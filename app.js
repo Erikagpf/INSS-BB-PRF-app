@@ -20,7 +20,10 @@
   var KEY = 'aprova-inss-bb-prf-v1';
 
   function padrao() {
-    return { resp: {}, modulos: {}, hist: [], prefs: { tema: '', estudar: 'comum', treino: 'inss', simulado: 'inss' } };
+    return {
+      resp: {}, modulos: {}, hist: [], redacoes: {},
+      prefs: { tema: '', estudar: 'comum', treino: 'inss', simulado: 'inss', redacao: 'inss' }
+    };
   }
 
   var S = (function carregar() {
@@ -29,6 +32,7 @@
       var salvo = JSON.parse(localStorage.getItem(KEY) || '{}');
       Object.keys(salvo).forEach(function (k) { base[k] = salvo[k]; });
       if (!base.prefs) base.prefs = padrao().prefs;
+      if (!base.redacoes) base.redacoes = {};
     } catch (e) { /* começa do zero */ }
     return base;
   })();
@@ -670,6 +674,161 @@
     window.scrollTo(0, 0);
   }
 
+  /* ==================== ABA 4 — REDAÇÃO ==================== */
+
+  function temaRedacao(id) {
+    for (var i = 0; i < CONC.redacoes.length; i++) if (CONC.redacoes[i].id === id) return CONC.redacoes[i];
+    return null;
+  }
+
+  function montarPrompt(t, texto) {
+    var banca = t.banca.replace('Estilo ', '');
+    var p = '';
+    p += 'Você é um examinador experiente da banca ' + banca + ' corrigindo a prova discursiva do concurso ' +
+      CONCURSOS[t.concurso].nome + '. Corrija a redação abaixo com o rigor de uma prova real.\n\n';
+    p += '=== TEMA PROPOSTO ===\n';
+    p += t.titulo + '\n\n';
+    p += 'Texto motivador: ' + t.motivador + '\n\n';
+    p += 'Comando: ' + t.comando + '\n\n';
+    p += 'Aspectos de abordagem obrigatória:\n';
+    t.aspectos.forEach(function (a, i) { p += (i + 1) + ') ' + a + '\n'; });
+    p += '\nGênero: ' + t.genero + '. Extensão máxima: ' + t.linhas + ' linhas.\n\n';
+    p += '=== COMO CORRIGIR ===\n';
+    p += 'Pontue cada critério:\n';
+    p += '1. Apresentação e estrutura textual (paragrafação, coesão, coerência) — 0 a 2 pontos\n';
+    p += '2. Desenvolvimento do tema e dos aspectos obrigatórios — 0 a 6 pontos\n';
+    p += '3. Domínio da norma culta (gramática, ortografia, pontuação, concordância, regência, crase) — 0 a 2 pontos\n';
+    p += 'Nota final: 0 a 10.\n\n';
+    p += 'Na resposta, faça exatamente isto, nesta ordem:\n';
+    p += '1. A nota de cada critério e a nota final, com uma frase de justificativa em cada.\n';
+    p += '2. Aspecto por aspecto, diga se foi abordado, abordado parcialmente ou não abordado. Aspecto ausente derruba muito a nota.\n';
+    p += '3. Liste TODOS os erros de português em tabela: trecho original | qual é o erro | como deveria ser.\n';
+    p += '4. Aponte os problemas de argumentação: afirmação sem justificativa, senso comum, repetição de ideia, fuga ao tema, conclusão que não conclui.\n';
+    p += '5. Reescreva apenas a introdução e a conclusão, mostrando como ficariam melhores, e explique o que mudou.\n';
+    p += '6. Termine com "3 coisas para treinar na próxima redação", bem específicas.\n\n';
+    p += 'Regras: não reescreva o texto inteiro; não elogie por educação; seja direto e rigoroso como banca; ';
+    p += 'avise se o texto passou do limite de linhas ou ficou curto demais. Responda em português do Brasil.\n\n';
+    p += '=== MINHA REDAÇÃO ===\n';
+    p += (texto && texto.trim() ? texto.trim() : '[cole aqui a sua redação]') + '\n';
+    return p;
+  }
+
+  function copiar(txt, msg) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.top = '-1000px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast(msg); }
+      catch (e) { toast('Não deu para copiar. Selecione o texto do prompt e copie na mão.'); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { toast(msg); }, fallback);
+    } else { fallback(); }
+  }
+
+  function contagem(txt) {
+    var limpo = txt.replace(/\s+/g, ' ').trim();
+    var palavras = limpo ? limpo.split(' ').length : 0;
+    return { palavras: palavras, caracteres: txt.length, linhas: Math.ceil(txt.length / 70) };
+  }
+
+  function telaRedacoes(edital) {
+    var e = edital || S.prefs.redacao || 'inss';
+    S.prefs.redacao = e; salvar();
+    var temas = CONC.redacoes.filter(function (t) { return t.concurso === e; });
+
+    var h = '';
+    h += '<h1>Redação corrigida por IA</h1>';
+    h += '<p class="muted">Aqui o tema já vem pronto, no formato da banca. Você escreve, copia o prompt com um clique e cola num chat de inteligência artificial — ele devolve a nota por critério, os erros de português e o que treinar.</p>';
+    h += chipsConcurso(e, 'red-edital', false);
+
+    h += '<div class="card hero"><h3 style="margin-top:0">Como funciona</h3><ol>' +
+      '<li>Escolha um tema abaixo e leia o comando com atenção.</li>' +
+      '<li>Escreva no campo do app (ou no papel, cronometrando — e depois digite).</li>' +
+      '<li>Clique em <strong>Copiar prompt + minha redação</strong>.</li>' +
+      '<li>Cole num chat de IA (ChatGPT, Claude ou Gemini) e envie. A correção vem na hora.</li>' +
+      '<li>Reescreva o texto corrigindo o que ele apontou. É a reescrita que faz a nota subir.</li>' +
+      '</ol><p class="small muted" style="margin-bottom:0">Dica: faça uma redação por semana e guarde as correções. Em um mês dá para ver o padrão de erro se repetindo — é nele que se estuda.</p></div>';
+
+    if (e === 'inss') {
+      h += '<div class="callout">As últimas edições do concurso de Técnico do Seguro Social não tiveram prova discursiva. Mesmo assim, escrever sobre esses temas é o melhor jeito de fixar Direito Previdenciário — e o edital pode voltar a cobrar.</div>';
+    }
+
+    h += '<div class="mod-list">';
+    temas.forEach(function (t, i) {
+      var escrito = S.redacoes[t.id] && S.redacoes[t.id].trim();
+      h += '<button class="mod' + (escrito ? ' done' : '') + '" data-act="abrir-red" data-id="' + t.id + '">' +
+        '<span class="num">' + (escrito ? '✓' : (i + 1)) + '</span>' +
+        '<span class="grow"><span class="t">' + esc(t.titulo) + '</span><br>' +
+        '<span class="s">' + esc(t.genero) + ' · ' + t.linhas + ' linhas · ' + t.tempoMin + ' min</span></span>' +
+        '</button>';
+    });
+    h += '</div>';
+
+    view.innerHTML = h;
+    window.scrollTo(0, 0);
+  }
+
+  function telaRedacaoTema(id) {
+    var t = temaRedacao(id);
+    if (!t) { location.hash = '#/redacao'; return; }
+    var texto = S.redacoes[t.id] || '';
+    var c = contagem(texto);
+
+    var h = '';
+    h += '<div class="breadcrumb"><button data-act="voltar-redacao">← Temas de redação</button></div>';
+    h += '<h1>' + esc(t.titulo) + '</h1>';
+    h += '<div class="row"><span class="tag">' + esc(CONCURSOS[t.concurso].nome) + '</span>' +
+      '<span class="tag">' + esc(t.banca) + '</span><span class="tag">' + esc(t.genero) + '</span>' +
+      '<span class="tag">até ' + t.linhas + ' linhas</span><span class="tag">' + t.tempoMin + ' min</span></div>';
+
+    h += '<div class="card">';
+    h += '<h3 style="margin-top:0">Texto motivador</h3><p>' + esc(t.motivador) + '</p>';
+    h += '<h3>Comando da prova</h3><p><strong>' + esc(t.comando) + '</strong></p>';
+    h += '<p>Ao elaborar seu texto, aborde, necessariamente, os seguintes aspectos:</p><ol>' +
+      t.aspectos.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ol>';
+    h += '<p class="small muted">Não se identifique no texto: em prova real, identificação anula a redação.</p>';
+    h += '</div>';
+
+    h += '<details class="faq"><summary>👀 Ver o que a banca espera (abra só depois de escrever)</summary><ul>' +
+      t.espera.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></details>';
+
+    h += '<div class="card">';
+    h += '<h3 style="margin-top:0">Sua redação</h3>';
+    h += '<textarea class="redacao" id="txtRedacao" data-act="digitar" placeholder="Escreva aqui. O texto fica salvo neste navegador automaticamente."></textarea>';
+    h += '<p class="small muted" id="contador">' + c.palavras + ' palavras · ' + c.caracteres +
+      ' caracteres · aproximadamente ' + c.linhas + ' de ' + t.linhas + ' linhas</p>';
+    h += '<div class="row">';
+    h += '<button class="btn grow" data-act="copiar-tudo" data-id="' + t.id + '">📋 Copiar prompt + minha redação</button>';
+    h += '<button class="btn subtle" data-act="copiar-prompt" data-id="' + t.id + '">Copiar só o prompt</button>';
+    h += '<button class="btn subtle" data-act="limpar-red" data-id="' + t.id + '">Limpar</button>';
+    h += '</div>';
+    h += '</div>';
+
+    h += '<div class="card">';
+    h += '<h3 style="margin-top:0">Onde colar</h3>';
+    h += '<p class="small muted">Abra um destes, cole e envie. Todos têm versão gratuita.</p>';
+    h += '<div class="ia-links">' +
+      '<a href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>' +
+      '<a href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>' +
+      '<a href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>' +
+      '</div>';
+    h += '</div>';
+
+    h += '<details class="faq"><summary>Ver o prompt que será copiado</summary>' +
+      '<pre class="prompt" id="preview" style="margin-top:10px"></pre></details>';
+
+    h += '<div style="height:24px"></div>';
+
+    view.innerHTML = h;
+    var ta = document.getElementById('txtRedacao');
+    ta.value = texto;
+    document.getElementById('preview').textContent = montarPrompt(t, texto);
+    window.scrollTo(0, 0);
+  }
+
   /* ==================== navegação ==================== */
 
   function abaAtiva(nome) {
@@ -683,6 +842,10 @@
     var partes = h.replace('#/', '').split('/');
     pararTimer();
     if (partes[0] === 'treino') { abaAtiva('treino'); telaTreino(); }
+    else if (partes[0] === 'redacao') {
+      abaAtiva('redacao');
+      if (partes[1]) telaRedacaoTema(partes[1]); else telaRedacoes();
+    }
     else if (partes[0] === 'simulados') { abaAtiva('simulados'); telaSimulados(); }
     else if (partes[0] === 'modulo') { abaAtiva('estudar'); telaModulo(partes[1]); }
     else { abaAtiva('estudar'); telaEstudar(partes[1]); }
@@ -700,6 +863,26 @@
     else if (act === 'treino-qtd') { treinoCfg.qtd = parseInt(el.value, 10); }
     else if (act === 'treino-erros') { treinoCfg.soErros = el.checked; telaTreino(); }
     else if (act === 'treino-espec') { treinoCfg.soEspecificas = el.checked; treinoCfg.materia = ''; telaTreino(); }
+  });
+
+  view.addEventListener('input', function (e) {
+    var el = e.target.closest('[data-act="digitar"]');
+    if (!el) return;
+    var id = (location.hash.split('/')[2] || '');
+    var t = temaRedacao(id);
+    if (!t) return;
+    S.redacoes[t.id] = el.value;
+    clearTimeout(view._salvaRed);
+    view._salvaRed = setTimeout(salvar, 400);
+    var c = contagem(el.value);
+    var cont = document.getElementById('contador');
+    if (cont) {
+      cont.textContent = c.palavras + ' palavras · ' + c.caracteres +
+        ' caracteres · aproximadamente ' + c.linhas + ' de ' + t.linhas + ' linhas';
+      cont.classList.toggle('estourou', c.linhas > t.linhas);
+    }
+    var pre = document.getElementById('preview');
+    if (pre) pre.textContent = montarPrompt(t, el.value);
   });
 
   view.addEventListener('click', function (e) {
@@ -841,6 +1024,42 @@
       case 'ir-simulados':
         telaSimulados();
         break;
+
+      case 'red-edital':
+        telaRedacoes(el.dataset.id);
+        break;
+
+      case 'abrir-red':
+        location.hash = '#/redacao/' + el.dataset.id;
+        break;
+
+      case 'voltar-redacao':
+        location.hash = '#/redacao';
+        break;
+
+      case 'copiar-tudo': {
+        var tt = temaRedacao(el.dataset.id);
+        var campo = document.getElementById('txtRedacao');
+        var escrito = campo ? campo.value : (S.redacoes[tt.id] || '');
+        if (!escrito.trim()) { toast('Escreva a redação primeiro — ou use "Copiar só o prompt".'); return; }
+        copiar(montarPrompt(tt, escrito), 'Copiado! Agora cole no chat de IA e envie.');
+        break;
+      }
+
+      case 'copiar-prompt': {
+        var tp = temaRedacao(el.dataset.id);
+        copiar(montarPrompt(tp, ''), 'Prompt copiado. Cole a sua redação no fim dele.');
+        break;
+      }
+
+      case 'limpar-red': {
+        if (!confirm('Apagar o que você escreveu neste tema?')) return;
+        delete S.redacoes[el.dataset.id];
+        salvar();
+        telaRedacaoTema(el.dataset.id);
+        toast('Texto apagado.');
+        break;
+      }
 
       case 'zerar':
         if (confirm('Isso apaga todo o seu histórico de respostas e simulados neste aparelho. Continuar?')) {

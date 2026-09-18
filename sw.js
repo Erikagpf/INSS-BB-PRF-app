@@ -1,10 +1,10 @@
 /* Cache simples para o app funcionar offline depois da primeira visita. */
-var CACHE = 'aprova-v1';
+var CACHE = 'aprova-v2';
 var ARQUIVOS = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icons/icon.svg',
   './dados/conteudo-comum.js', './dados/conteudo-inss.js', './dados/conteudo-bb.js', './dados/conteudo-prf.js',
   './dados/banco-comum.js', './dados/banco-inss.js', './dados/banco-bb.js', './dados/banco-prf.js',
-  './dados/simulados.js'
+  './dados/simulados.js', './dados/redacoes.js'
 ];
 
 self.addEventListener('install', function (e) {

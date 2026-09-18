@@ -26,6 +26,7 @@
   <a href="#/estudar" data-tab="estudar"><span class="ti" aria-hidden="true">📚</span><span>Conteúdo</span></a>
   <a href="#/treino" data-tab="treino"><span class="ti" aria-hidden="true">🎯</span><span>Treino</span></a>
   <a href="#/simulados" data-tab="simulados"><span class="ti" aria-hidden="true">⏱️</span><span>Simulados</span></a>
+  <a href="#/redacao" data-tab="redacao"><span class="ti" aria-hidden="true">📝</span><span>Redação</span></a>
 </nav>
 
 <main id="view" tabindex="-1"></main>
@@ -37,9 +38,11 @@
     trilhas: [],
     banco: [],
     simulados: [],
+    redacoes: [],
     addTrilha: function (t) { this.trilhas.push(t); },
     addQuestoes: function (arr) { this.banco.push.apply(this.banco, arr); },
-    addSimulados: function (arr) { this.simulados.push.apply(this.simulados, arr); }
+    addSimulados: function (arr) { this.simulados.push.apply(this.simulados, arr); },
+    addRedacoes: function (arr) { this.redacoes.push.apply(this.redacoes, arr); }
   };
 </script>
 <script src="dados/conteudo-comum.js"></script>
@@ -51,6 +54,7 @@
 <script src="dados/banco-bb.js"></script>
 <script src="dados/banco-prf.js"></script>
 <script src="dados/simulados.js"></script>
+<script src="dados/redacoes.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
