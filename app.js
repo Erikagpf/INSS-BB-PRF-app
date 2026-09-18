@@ -21,7 +21,7 @@
 
   function padrao() {
     return {
-      resp: {}, modulos: {}, hist: [], redacoes: {},
+      resp: {}, modulos: {}, hist: [], redacoes: {}, correcoes: {},
       prefs: { tema: '', estudar: 'comum', treino: 'inss', simulado: 'inss', redacao: 'inss' }
     };
   }
@@ -33,6 +33,7 @@
       Object.keys(salvo).forEach(function (k) { base[k] = salvo[k]; });
       if (!base.prefs) base.prefs = padrao().prefs;
       if (!base.redacoes) base.redacoes = {};
+      if (!base.correcoes) base.correcoes = {};
     } catch (e) { /* começa do zero */ }
     return base;
   })();
@@ -700,7 +701,8 @@
     p += '3. Domínio da norma culta (gramática, ortografia, pontuação, concordância, regência, crase) — 0 a 2 pontos\n';
     p += 'Nota final: 0 a 10.\n\n';
     p += 'Na resposta, faça exatamente isto, nesta ordem:\n';
-    p += '1. A nota de cada critério e a nota final, com uma frase de justificativa em cada.\n';
+    p += '0. Comece por uma linha isolada, exatamente neste formato: NOTA FINAL: X,X/10\n';
+    p += '1. A nota de cada critério, com uma frase de justificativa em cada.\n';
     p += '2. Aspecto por aspecto, diga se foi abordado, abordado parcialmente ou não abordado. Aspecto ausente derruba muito a nota.\n';
     p += '3. Liste TODOS os erros de português em tabela: trecho original | qual é o erro | como deveria ser.\n';
     p += '4. Aponte os problemas de argumentação: afirmação sem justificativa, senso comum, repetição de ideia, fuga ao tema, conclusão que não conclui.\n';
@@ -734,6 +736,63 @@
     return { palavras: palavras, caracteres: txt.length, linhas: Math.ceil(txt.length / 70) };
   }
 
+  function correcoesDe(temaId) { return S.correcoes[temaId] || []; }
+
+  function todasCorrecoes(concurso) {
+    var lista = [];
+    Object.keys(S.correcoes).forEach(function (temaId) {
+      var t = temaRedacao(temaId);
+      if (!t) return;
+      if (concurso && t.concurso !== concurso) return;
+      S.correcoes[temaId].forEach(function (c, i) {
+        lista.push({ tema: t, idx: i, quando: c.quando, nota: c.nota, comentario: c.comentario });
+      });
+    });
+    return lista.sort(function (a, b) { return a.quando - b.quando; });
+  }
+
+  function painelNotas(concurso) {
+    var lista = todasCorrecoes(concurso);
+    if (!lista.length) {
+      return '<div class="card tight small muted">Assim que você registrar a primeira correção da IA, ' +
+        'aparece aqui um painel com a média das notas e a evolução ao longo do tempo.</div>';
+    }
+    var soma = 0, melhor = 0;
+    lista.forEach(function (c) { soma += c.nota; if (c.nota > melhor) melhor = c.nota; });
+    var media = soma / lista.length;
+    var ultimas = lista.slice(-6);
+    var evolucao = '';
+    if (lista.length >= 3) {
+      var metade = Math.floor(lista.length / 2);
+      var ini = lista.slice(0, metade).reduce(function (a, c) { return a + c.nota; }, 0) / metade;
+      var fim = lista.slice(-metade).reduce(function (a, c) { return a + c.nota; }, 0) / metade;
+      var dif = fim - ini;
+      evolucao = '<div class="callout ' + (dif >= 0.5 ? 'ok' : dif <= -0.5 ? 'bad' : 'info') + '">' +
+        (dif >= 0.5 ? '📈 Suas notas estão subindo: das primeiras para as últimas redações, a média passou de ' +
+          ini.toFixed(1) + ' para ' + fim.toFixed(1) + '.'
+          : dif <= -0.5 ? '📉 A média caiu de ' + ini.toFixed(1) + ' para ' + fim.toFixed(1) +
+            '. Releia as últimas correções antes de escrever de novo.'
+            : 'A média está estável em torno de ' + media.toFixed(1) + '. Para destravar, escolha um único erro recorrente e ataque só ele na próxima.') +
+        '</div>';
+    }
+
+    var h = '<div class="card"><h3 style="margin-top:0">Suas notas nas redações</h3>';
+    h += '<div class="statgrid">' +
+      '<div class="stat"><b>' + lista.length + '</b><span>corrigidas</span></div>' +
+      '<div class="stat"><b>' + media.toFixed(1) + '</b><span>média</span></div>' +
+      '<div class="stat"><b>' + melhor.toFixed(1) + '</b><span>melhor nota</span></div></div>';
+    h += '<table class="rel" style="margin-top:12px"><tr><th>Data</th><th>Tema</th><th class="num">Nota</th></tr>';
+    ultimas.forEach(function (c) {
+      var p10 = Math.round(c.nota * 10);
+      h += '<tr><td class="small">' + esc(dataTexto(c.quando).split(' ')[0]) + '</td>' +
+        '<td class="small">' + esc(c.tema.titulo) + '</td>' +
+        '<td class="num" style="min-width:96px">' + barra(p10) +
+        '<span class="small">' + c.nota.toFixed(1) + '</span></td></tr>';
+    });
+    h += '</table>' + evolucao + '</div>';
+    return h;
+  }
+
   function telaRedacoes(edital) {
     var e = edital || S.prefs.redacao || 'inss';
     S.prefs.redacao = e; salvar();
@@ -756,13 +815,17 @@
       h += '<div class="callout">As últimas edições do concurso de Técnico do Seguro Social não tiveram prova discursiva. Mesmo assim, escrever sobre esses temas é o melhor jeito de fixar Direito Previdenciário — e o edital pode voltar a cobrar.</div>';
     }
 
+    h += painelNotas(e);
+
     h += '<div class="mod-list">';
     temas.forEach(function (t, i) {
       var escrito = S.redacoes[t.id] && S.redacoes[t.id].trim();
+      var corr = correcoesDe(t.id);
       h += '<button class="mod' + (escrito ? ' done' : '') + '" data-act="abrir-red" data-id="' + t.id + '">' +
         '<span class="num">' + (escrito ? '✓' : (i + 1)) + '</span>' +
         '<span class="grow"><span class="t">' + esc(t.titulo) + '</span><br>' +
-        '<span class="s">' + esc(t.genero) + ' · ' + t.linhas + ' linhas · ' + t.tempoMin + ' min</span></span>' +
+        '<span class="s">' + esc(t.genero) + ' · ' + t.linhas + ' linhas · ' + t.tempoMin + ' min' +
+        (corr.length ? ' · nota ' + corr[corr.length - 1].nota.toFixed(1) : '') + '</span></span>' +
         '</button>';
     });
     h += '</div>';
@@ -774,6 +837,7 @@
   function telaRedacaoTema(id) {
     var t = temaRedacao(id);
     if (!t) { location.hash = '#/redacao'; return; }
+    S.prefs.redacao = t.concurso; salvar();
     var texto = S.redacoes[t.id] || '';
     var c = contagem(texto);
 
@@ -815,6 +879,34 @@
       '<a href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>' +
       '<a href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>' +
       '</div>';
+    h += '</div>';
+
+    h += '<div class="card">';
+    h += '<h3 style="margin-top:0">Registrar a correção da IA</h3>';
+    h += '<p class="small muted">Depois que a IA corrigir, anote aqui a nota que ela deu e cole os pontos principais. ' +
+      'É assim que dá para ver a evolução e descobrir qual erro se repete.</p>';
+    h += '<div class="row"><label class="field" style="width:140px">Nota final (0 a 10)' +
+      '<input type="number" id="notaIA" min="0" max="10" step="0.5" placeholder="7,5"></label></div>';
+    h += '<textarea class="redacao" id="comentarioIA" style="min-height:130px;margin-top:10px" ' +
+      'placeholder="Cole a correção da IA, ou resuma: o que ela apontou de erro e o que mandou treinar."></textarea>';
+    h += '<button class="btn wide" data-act="salvar-correcao" data-id="' + t.id + '" style="margin-top:10px">Salvar correção</button>';
+
+    var corr = correcoesDe(t.id);
+    if (corr.length) {
+      h += '<h4>Correções anteriores deste tema</h4>';
+      corr.slice().reverse().forEach(function (c, i) {
+        var pos = corr.length - 1 - i;
+        h += '<details class="faq"><summary>' + esc(dataTexto(c.quando)) + ' — nota ' + c.nota.toFixed(1) +
+          ' · ' + c.palavras + ' palavras</summary>';
+        if (c.comentario) h += '<p class="small" style="white-space:pre-wrap">' + esc(c.comentario) + '</p>';
+        else h += '<p class="small muted">Sem comentários anotados.</p>';
+        h += '<details class="faq"><summary>Ver a redação desta versão</summary>' +
+          '<p class="small" style="white-space:pre-wrap">' + esc(c.redacao || '') + '</p></details>';
+        h += '<button class="btn subtle small" data-act="apagar-correcao" data-id="' + t.id +
+          '" data-i="' + pos + '" style="margin-top:8px">Apagar este registro</button>';
+        h += '</details>';
+      });
+    }
     h += '</div>';
 
     h += '<details class="faq"><summary>Ver o prompt que será copiado</summary>' +
@@ -1049,6 +1141,34 @@
       case 'copiar-prompt': {
         var tp = temaRedacao(el.dataset.id);
         copiar(montarPrompt(tp, ''), 'Prompt copiado. Cole a sua redação no fim dele.');
+        break;
+      }
+
+      case 'salvar-correcao': {
+        var tc = temaRedacao(el.dataset.id);
+        var campoNota = document.getElementById('notaIA');
+        var nota = parseFloat(String(campoNota.value).replace(',', '.'));
+        if (isNaN(nota) || nota < 0 || nota > 10) { toast('Informe a nota final, de 0 a 10.'); campoNota.focus(); return; }
+        var comentario = (document.getElementById('comentarioIA').value || '').trim();
+        var red = (document.getElementById('txtRedacao').value || '').trim();
+        if (!S.correcoes[tc.id]) S.correcoes[tc.id] = [];
+        S.correcoes[tc.id].push({
+          quando: Date.now(), nota: nota, comentario: comentario,
+          redacao: red, palavras: contagem(red).palavras
+        });
+        salvar();
+        telaRedacaoTema(tc.id);
+        toast('Correção salva! Agora reescreva o texto corrigindo o que ela apontou.');
+        break;
+      }
+
+      case 'apagar-correcao': {
+        if (!confirm('Apagar este registro de correção?')) return;
+        var tid = el.dataset.id;
+        S.correcoes[tid].splice(parseInt(el.dataset.i, 10), 1);
+        if (!S.correcoes[tid].length) delete S.correcoes[tid];
+        salvar();
+        telaRedacaoTema(tid);
         break;
       }
 
