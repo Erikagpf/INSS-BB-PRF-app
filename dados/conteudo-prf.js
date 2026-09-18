@@ -2,9 +2,9 @@
 CONC.addTrilha({
   id: 'prf',
   nome: 'Específico PRF',
-  subtitulo: 'Policial Rodoviário Federal · exige nível superior',
+  subtitulo: 'Policial Rodoviário Federal · nível superior',
   descricao: 'A PRF cobra legislação de trânsito (CTB), direito penal e processual penal, direito administrativo e constitucional, legislação especial, direitos humanos, física aplicada e geopolítica. A banca das últimas edições foi a CEBRASPE: itens de Certo/Errado com desconto para erro, além de prova discursiva, teste físico e demais fases.',
-  dica: 'Atenção: o cargo de Policial Rodoviário Federal exige diploma de curso superior em qualquer área. Se ainda estiver no ensino médio, use esta trilha como preparação de base e foque primeiro em INSS e BB.',
+  dica: 'Legislação de Trânsito é a matéria que mais pesa: comece por ela e por Direito Penal. Física e Geopolítica são poucas questões, mas rendem ponto fácil perto do esforço.',
   modulos: [
 
   {

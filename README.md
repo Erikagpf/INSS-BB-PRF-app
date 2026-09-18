@@ -60,9 +60,10 @@ Sem GitHub também dá: mande a pasta compactada, a pessoa descompacta e abre o 
 
 - **INSS — Técnico do Seguro Social**: nível médio.
 - **Banco do Brasil — Escriturário**: nível médio.
-- **PRF — Policial Rodoviário Federal**: exige **curso superior completo** em qualquer área.
-  Quem ainda está no ensino médio pode usar a trilha da PRF como base, mas só poderá tomar posse
-  com o diploma. INSS e BB são os caminhos imediatos.
+- **PRF — Policial Rodoviário Federal**: curso superior completo em qualquer área.
+
+A PRF tem ainda outras fases além da prova objetiva: discursiva, teste de aptidão física,
+exames médicos e psicológico, investigação social e curso de formação.
 
 ## Como acrescentar conteúdo ou questões
 
