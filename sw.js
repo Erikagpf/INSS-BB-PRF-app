@@ -1,5 +1,5 @@
 /* Cache simples para o app funcionar offline depois da primeira visita. */
-var CACHE = 'aprova-v2';
+var CACHE = 'aprova-v3';
 var ARQUIVOS = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icons/icon.svg',
   './dados/conteudo-comum.js', './dados/conteudo-inss.js', './dados/conteudo-bb.js', './dados/conteudo-prf.js',
@@ -19,13 +19,17 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
+  // Responde na hora com o cache e, em paralelo, busca a versão nova para a próxima abertura.
   e.respondWith(
-    caches.match(e.request).then(function (r) {
-      return r || fetch(e.request).then(function (resp) {
-        var copia = resp.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
+    caches.match(e.request).then(function (cacheado) {
+      var daRede = fetch(e.request).then(function (resp) {
+        if (resp && resp.status === 200) {
+          var copia = resp.clone();
+          caches.open(CACHE).then(function (c) { c.put(e.request, copia); });
+        }
         return resp;
-      }).catch(function () { return caches.match('./index.html'); });
+      }).catch(function () { return cacheado || caches.match('./index.html'); });
+      return cacheado || daRede;
     })
   );
 });
