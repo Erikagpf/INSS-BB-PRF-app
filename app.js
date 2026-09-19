@@ -12,6 +12,8 @@
     prf:   { nome: 'PRF',               curto: 'PRF',   icone: '🚓' }
   };
 
+  var LINK_APP = 'https://erikagpf.github.io/INSS-BB-PRF-app/';
+
   var view = document.getElementById('view');
   var toastEl = document.getElementById('toast');
 
@@ -984,6 +986,56 @@
     window.scrollTo(0, 0);
   }
 
+
+  /* ==================== TELA DE AJUDA ==================== */
+
+  function telaAjuda() {
+    var h = '';
+    h += '<div class="breadcrumb"><button data-act="voltar-inicio">← Voltar para o app</button></div>';
+    h += '<h1>Como instalar e usar</h1>';
+    h += '<p class="muted">Funciona no computador e no celular. Dá para instalar na tela de início e estudar sem internet.</p>';
+
+    h += '<div class="card"><h3 style="margin-top:0">🔗 O link do app</h3>';
+    h += '<p class="mono small" style="word-break:break-all">' + LINK_APP + '</p>';
+    h += '<button class="btn small" data-act="copiar-link">Copiar link</button></div>';
+
+    h += '<div class="card"><h3 style="margin-top:0">💻 No computador (Windows ou Mac)</h3>';
+    h += '<p>Abra o link no navegador (Chrome, Edge ou Safari) e salve nos favoritos. No Chrome e no Edge ainda dá para instalar de vez: ' +
+      'clique no ícone de instalar que aparece na barra de endereço, ou no menu <strong>⋮</strong> → <strong>Instalar</strong>.</p></div>';
+
+    h += '<div class="card"><h3 style="margin-top:0">🤖 No celular Android</h3><ol>' +
+      '<li>Abra o link no <strong>Chrome</strong>.</li>' +
+      '<li>Toque nos <strong>três pontinhos (⋮)</strong>, no canto superior direito.</li>' +
+      '<li>Escolha <strong>Adicionar à tela inicial</strong> — em alguns aparelhos aparece como <strong>Instalar aplicativo</strong>.</li>' +
+      '<li>Confirme em <strong>Instalar</strong>.</li></ol>' +
+      '<p class="small muted">Se surgir sozinha uma barrinha embaixo escrita "Instalar app", pode tocar nela direto. ' +
+      'No Samsung Internet o caminho é: menu ☰ → Adicionar página a → Tela inicial.</p></div>';
+
+    h += '<div class="card"><h3 style="margin-top:0">🍎 No iPhone ou iPad</h3><ol>' +
+      '<li>Abra o link no <strong>Safari</strong> (pelo Chrome do iPhone não funciona).</li>' +
+      '<li>Toque no botão de <strong>compartilhar</strong>, o quadradinho com a seta para cima.</li>' +
+      '<li>Role a lista e escolha <strong>Adicionar à Tela de Início</strong>.</li>' +
+      '<li>Confirme em <strong>Adicionar</strong>.</li></ol></div>';
+
+    h += '<div class="callout ok">Depois de instalado, o app abre em tela cheia, sem barra de navegador, e <strong>funciona sem internet</strong> — ' +
+      'dá para estudar no ônibus, na fila, onde for.</div>';
+
+    h += '<div class="card"><h3 style="margin-top:0">💾 Seu progresso</h3>';
+    h += '<p>Tudo é salvo sozinho, sem precisar de login: módulos lidos, acertos e erros por matéria, simulados feitos e os textos que você escreve. ' +
+      'Só que fica guardado <strong>neste aparelho</strong> — celular e computador têm históricos separados.</p>';
+    h += '<p>Para juntar os dois, vá na aba <strong>Treino</strong>, desça até o fim e abra ' +
+      '<strong>📦 Levar meu progresso para outro aparelho</strong>: copie o código em um aparelho e importe no outro. ' +
+      'Os dois históricos são somados, nada é apagado.</p>';
+    h += '<p class="small muted">Dois cuidados: limpar os dados do navegador apaga o progresso deste aparelho, e a aba anônima não guarda nada.</p></div>';
+
+    h += '<div class="card tight small muted">Quando o app for atualizado com mais questões ou conteúdo novo, não precisa fazer nada: ' +
+      'é só abrir duas vezes que a versão nova entra sozinha.</div>';
+    h += '<div style="height:20px"></div>';
+
+    view.innerHTML = h;
+    window.scrollTo(0, 0);
+  }
+
   /* ==================== navegação ==================== */
 
   function abaAtiva(nome) {
@@ -996,7 +1048,8 @@
     var h = location.hash || '#/estudar';
     var partes = h.replace('#/', '').split('/');
     pararTimer();
-    if (partes[0] === 'treino') { abaAtiva('treino'); telaTreino(); }
+    if (partes[0] === 'ajuda') { abaAtiva(''); telaAjuda(); }
+    else if (partes[0] === 'treino') { abaAtiva('treino'); telaTreino(); }
     else if (partes[0] === 'redacao') {
       abaAtiva('redacao');
       if (partes[1]) telaRedacaoTema(partes[1]); else telaRedacoes();
@@ -1244,6 +1297,14 @@
         toast('Texto apagado.');
         break;
       }
+
+      case 'voltar-inicio':
+        location.hash = '#/estudar';
+        break;
+
+      case 'copiar-link':
+        copiar(LINK_APP, 'Link copiado! Agora é só colar no WhatsApp.');
+        break;
 
       case 'copiar-progresso':
         copiar(JSON.stringify(S), 'Progresso copiado! Cole no outro aparelho.');

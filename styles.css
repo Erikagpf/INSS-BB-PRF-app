@@ -78,6 +78,7 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monosp
   width: 40px; height: 40px; cursor: pointer; font-size: 1.05rem;
 }
 .icon-btn:active { transform: scale(.96); }
+a.icon-btn { display: grid; place-items: center; text-decoration: none; color: inherit; }
 
 /* ---------- tabs ---------- */
 .tabs {

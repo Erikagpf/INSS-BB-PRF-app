@@ -45,6 +45,8 @@ A maneira mais fácil é publicar no GitHub Pages e mandar o link:
 
 Sem GitHub também dá: mande a pasta compactada, a pessoa descompacta e abre o `index.html`.
 
+> Dentro do próprio app há um botão **❓** no topo, com as instruções de instalação no Android, no iPhone e no computador.
+
 ## Progresso e vários aparelhos
 
 O progresso (módulos estudados, acertos, simulados e textos) fica guardado **no navegador de cada
