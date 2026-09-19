@@ -99,7 +99,8 @@
 
   function questoesDe(filtro) {
     return CONC.banco.filter(function (q) {
-      if (filtro.edital && q.editais.indexOf(filtro.edital) === -1) return false;
+      if (filtro.edital === 'comum') { if (q.editais.length < 3) return false; }
+      else if (filtro.edital && q.editais.indexOf(filtro.edital) === -1) return false;
       if (filtro.comum && q.editais.length < 3) return false;
       if (filtro.especificas && q.editais.length === 3) return false;
       if (filtro.materia && q.materia !== filtro.materia) return false;
@@ -124,7 +125,8 @@
   function estatMateria(edital) {
     var mapa = {};
     CONC.banco.forEach(function (q) {
-      if (edital && q.editais.indexOf(edital) === -1) return;
+      if (edital === 'comum') { if (q.editais.length < 3) return; }
+      else if (edital && q.editais.indexOf(edital) === -1) return;
       var r = S.resp[q.id];
       if (!r) return;
       var m = mapa[q.materia] || (mapa[q.materia] = { acertos: 0, erros: 0 });
@@ -409,7 +411,7 @@
     var h = '';
     h += '<h1>Treino rápido</h1>';
     h += '<p class="muted">Acabou de estudar uma matéria? Venha direto para cá testar. A correção e a explicação aparecem na hora, questão por questão.</p>';
-    h += chipsConcurso(treinoCfg.edital, 'treino-edital', false);
+    h += chipsConcurso(treinoCfg.edital, 'treino-edital', true);
 
     h += '<div class="card">';
     h += '<div class="row">';
@@ -424,8 +426,13 @@
     h += '</div>';
     h += '<div class="row" style="margin-top:10px">';
     h += '<label class="check"><input type="checkbox" data-act="treino-erros"' + (treinoCfg.soErros ? ' checked' : '') + '> Só as que eu errei</label>';
-    h += '<label class="check"><input type="checkbox" data-act="treino-espec"' + (treinoCfg.soEspecificas ? ' checked' : '') + '> Só matérias específicas</label>';
+    if (treinoCfg.edital !== 'comum') {
+      h += '<label class="check"><input type="checkbox" data-act="treino-espec"' + (treinoCfg.soEspecificas ? ' checked' : '') + '> Só matérias específicas</label>';
+    }
     h += '</div>';
+    if (treinoCfg.edital === 'comum') {
+      h += '<p class="small muted" style="margin-top:6px">Português, raciocínio lógico e matemática, informática, atualidades e ética: o que cai nas três provas ao mesmo tempo.</p>';
+    }
     h += '<p class="small muted" style="margin-top:10px">' + disponiveis.length + ' questões disponíveis com esses filtros.</p>';
     h += '<button class="btn wide" data-act="iniciar-treino"' + (disponiveis.length ? '' : ' disabled') + '>Começar treino</button>';
     h += '</div>';
@@ -451,9 +458,65 @@
       h += '<div class="card tight muted small">Assim que você responder algumas questões, aparece aqui um painel com o seu aproveitamento por matéria e o que precisa de reforço.</div>';
     }
 
+    h += cardBackup();
+
     view.innerHTML = h;
+    var cp = document.getElementById('codigoProgresso');
+    if (cp) cp.value = JSON.stringify(S);
     window.scrollTo(0, 0);
   }
+
+  /* ==================== backup do progresso ==================== */
+
+  function mesclarProgresso(novo) {
+    var contador = 0;
+    Object.keys(novo.resp || {}).forEach(function (id) {
+      var a = S.resp[id], b = novo.resp[id];
+      if (!a) { S.resp[id] = b; contador++; return; }
+      S.resp[id] = {
+        acertos: (a.acertos || 0) + (b.acertos || 0),
+        erros: (a.erros || 0) + (b.erros || 0),
+        ultimoOk: (b.quando || 0) > (a.quando || 0) ? b.ultimoOk : a.ultimoOk,
+        quando: Math.max(a.quando || 0, b.quando || 0)
+      };
+      contador++;
+    });
+    Object.keys(novo.modulos || {}).forEach(function (id) {
+      if (!S.modulos[id]) S.modulos[id] = novo.modulos[id];
+    });
+    var porData = {};
+    S.hist.concat(novo.hist || []).forEach(function (h) { porData[h.quando] = h; });
+    S.hist = Object.keys(porData).map(function (k) { return porData[k]; })
+      .sort(function (a, b) { return a.quando - b.quando; }).slice(-60);
+    Object.keys(novo.redacoes || {}).forEach(function (id) {
+      var t = novo.redacoes[id] || '';
+      if (!S.redacoes[id] || t.length > S.redacoes[id].length) S.redacoes[id] = t;
+    });
+    Object.keys(novo.correcoes || {}).forEach(function (id) {
+      var junto = (S.correcoes[id] || []).concat(novo.correcoes[id] || []);
+      var m = {};
+      junto.forEach(function (c) { m[c.quando] = c; });
+      S.correcoes[id] = Object.keys(m).map(function (k) { return m[k]; })
+        .sort(function (a, b) { return a.quando - b.quando; });
+    });
+    salvar();
+    return contador;
+  }
+
+  function cardBackup() {
+    var h = '<details class="faq"><summary>📦 Levar meu progresso para outro aparelho</summary>';
+    h += '<p class="small muted">O progresso fica guardado no navegador de cada aparelho — celular e computador não conversam sozinhos. ' +
+      'Para juntar os dois, copie o código abaixo e cole no outro aparelho.</p>';
+    h += '<textarea class="redacao" id="codigoProgresso" readonly style="min-height:90px;font-size:.72rem"></textarea>';
+    h += '<button class="btn small" data-act="copiar-progresso" style="margin-top:8px">Copiar meu progresso</button>';
+    h += '<hr class="hr">';
+    h += '<p class="small muted">Recebeu um código do outro aparelho? Cole aqui e importe. Os dois progressos são <strong>somados</strong>: nada é apagado.</p>';
+    h += '<textarea class="redacao" id="colarProgresso" placeholder="Cole aqui o código copiado do outro aparelho" style="min-height:90px;font-size:.72rem"></textarea>';
+    h += '<button class="btn small subtle" data-act="importar-progresso" style="margin-top:8px">Importar progresso</button>';
+    h += '</details>';
+    return h;
+  }
+
 
   /* ==================== ABA 3 — SIMULADOS ==================== */
 
@@ -1019,6 +1082,7 @@
       case 'treino-edital':
         treinoCfg.edital = el.dataset.id;
         treinoCfg.materia = '';
+        if (treinoCfg.edital === 'comum') treinoCfg.soEspecificas = false;
         telaTreino();
         break;
 
@@ -1178,6 +1242,26 @@
         salvar();
         telaRedacaoTema(el.dataset.id);
         toast('Texto apagado.');
+        break;
+      }
+
+      case 'copiar-progresso':
+        copiar(JSON.stringify(S), 'Progresso copiado! Cole no outro aparelho.');
+        break;
+
+      case 'importar-progresso': {
+        var campoImp = document.getElementById('colarProgresso');
+        var texto = (campoImp.value || '').trim();
+        if (!texto) { toast('Cole primeiro o código do outro aparelho.'); return; }
+        var novo;
+        try { novo = JSON.parse(texto); }
+        catch (e) { toast('Código inválido. Copie o código inteiro e tente de novo.'); return; }
+        if (!novo || typeof novo !== 'object' || (!novo.resp && !novo.modulos)) {
+          toast('Esse código não parece ser um progresso deste app.'); return;
+        }
+        var n = mesclarProgresso(novo);
+        toast('Progresso importado: ' + n + ' questões somadas ao histórico.');
+        telaTreino();
         break;
       }
 

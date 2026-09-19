@@ -45,6 +45,22 @@ A maneira mais fácil é publicar no GitHub Pages e mandar o link:
 
 Sem GitHub também dá: mande a pasta compactada, a pessoa descompacta e abre o `index.html`.
 
+## Progresso e vários aparelhos
+
+O progresso (módulos estudados, acertos, simulados e textos) fica guardado **no navegador de cada
+aparelho** — celular e computador não se conversam sozinhos, porque o app não tem servidor nem login.
+
+Para juntar os dois, use **Treino → 📦 Levar meu progresso para outro aparelho**:
+
+1. No aparelho que está mais adiantado, abra essa seção e toque em **Copiar meu progresso**.
+2. Mande o código para você mesmo (WhatsApp, e-mail, bloco de notas).
+3. No outro aparelho, abra a mesma seção, cole o código e toque em **Importar progresso**.
+
+Os dois históricos são **somados**, nada é apagado. Dá para repetir quando quiser.
+
+Duas observações: limpar os dados do navegador apaga o progresso daquele aparelho; e a aba anônima
+não guarda nada.
+
 ## Sobre o conteúdo
 
 - Os resumos seguem os editais mais recentes de cada concurso e os pontos historicamente mais
